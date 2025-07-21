@@ -1,0 +1,97 @@
+services:
+  postgres:
+    container_name: postgres
+    image: postgres
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: password
+      PGDATA: /data/postgres
+    volumes:
+      - postgres:/data/postgres
+    ports:
+      - "8082:5432"
+    networks:
+      - postgres
+    restart: unless-stopped
+
+  pgadmin:
+    container_name: pgadmin2
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-pgadmin4@pgadmin.org}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-admin}
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    volumes:
+      - pgadmin:/var/lib/pgadmin
+    ports:
+      - "5050:80"
+    networks:
+      - postgres
+    restart: unless-stopped
+
+  kafka:
+    image: apache/kafka:4.0.0
+    container_name: kafka
+    ports:
+      - "9092:9092"
+      - "9093:9093"
+    environment:
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_NODE_ID: 1
+      KAFKA_CLUSTER_ID: "ed650e14-b4c5-4cbd-9b3a-39ecbfecd5b6"
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_METADATA_LOG_SEGMENT_MS: 15000
+      KAFKA_METADATA_LOG_MAX_RECORD_BYTES_BETWEEN_SNAPSHOTS: 2800
+    volumes:
+      - kafka-data:/tmp/kraft-combined-logs
+    networks:
+      - spring
+    restart: unless-stopped
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui
+    container_name: kafka-ui
+    ports:
+      - "8085:8080"
+    environment:
+      - KAFKA_CLUSTERS_0_NAME=local
+      - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=kafka:9092
+    depends_on:
+      - kafka
+    networks:
+      - spring
+
+  zipkin:
+    image: openzipkin/zipkin
+    container_name: zipkin
+    ports:
+      - "9411:9411"
+    networks:
+      - spring
+
+  rabbitmq:
+    image: rabbitmq:3.9.11-management-alpine
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    networks:
+      - spring
+
+networks:
+  postgres:
+    driver: bridge
+  spring:
+    driver: bridge
+
+volumes:
+  postgres:
+  pgadmin:
+  kafka-data:

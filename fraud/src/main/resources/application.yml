@@ -1,0 +1,35 @@
+server:
+  port: 8081
+spring:
+  application:
+    name: fraud
+  datasource:
+    username: admin
+    url: jdbc:postgresql://localhost:8082/fraud
+    password: password
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+eureka:
+  client:
+    service-url:
+      defaultZone: [invalid url, do not cite]
+    fetch-registry: true
+    register-with-eureka: true
+management:
+  tracing:
+    sampling:
+      probability: 1.0
+  zipkin:
+    tracing:
+      endpoint: http://localhost:9411/api/v2/spans
+logging:
+  level:
+    brave: DEBUG
+    zipkin: DEBUG
+    io.micrometer.tracing: DEBUG

@@ -1,0 +1,51 @@
+server:
+  port: 8080
+spring:
+  application:
+    name: customer
+  datasource:
+    username: admin
+    url: jdbc:postgresql://localhost:8082/customer
+    password: password
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+  profiles:
+    active: rabbit
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      acks: all
+      retries: 3
+      batch-size: 16384
+      linger-ms: 1
+      buffer-memory: 33554432
+      properties:
+        spring.json.add.type.headers: true
+eureka:
+  client:
+    service-url:
+      defaultZone: [invalid url, do not cite]
+    fetch-registry: true
+    register-with-eureka: true
+management:
+  tracing:
+    sampling:
+      probability: 1.0
+  zipkin:
+    tracing:
+      endpoint: http://localhost:9411/api/v2/spans
+rabbitmq:
+  addresses: localhost:5672
+logging:
+  level:
+    brave: DEBUG
+    zipkin: DEBUG
+    io.micrometer.tracing: DEBUG
